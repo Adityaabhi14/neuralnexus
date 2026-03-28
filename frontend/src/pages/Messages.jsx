@@ -1,148 +1,210 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
+
+const Avatar = ({ name, image, size = 44 }) => (
+  <div className="rounded-full overflow-hidden shrink-0 bg-[#222]" style={{ width: size, height: size }}>
+    {image ? (
+      <img src={image} alt={name} className="w-full h-full object-cover" />
+    ) : (
+      <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-accent to-[#8b5cf6] text-white font-bold" style={{ fontSize: Math.round(size * 0.4) }}>
+        {name?.charAt(0).toUpperCase()}
+      </div>
+    )}
+  </div>
+);
 
 const Messages = () => {
   const [user, setUser] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [contacts, setContacts] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [inputText, setInputText] = useState('');
-  
-  const networkUsers = ['abhi', 'aditya', 'test', 'creator1'];
   const chatEndRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem('currentUser');
-      if (stored && stored !== "undefined") {
-        setUser(JSON.parse(stored));
-      }
-    } catch { }
+      if (stored && stored !== "undefined") setUser(JSON.parse(stored));
+    } catch {}
 
-    const syncMessages = async () => {
+    const fetchData = async () => {
       try {
-        const { data } = await api.get('/messages');
-        setMessages(Array.isArray(data) ? data : []);
-      } catch (err) { }
+        const [msgRes, usersRes] = await Promise.all([
+          api.get('/messages').catch(() => ({ data: [] })),
+          api.get('/users/suggestions').catch(() => ({ data: [] }))
+        ]);
+        setMessages(Array.isArray(msgRes.data) ? msgRes.data : []);
+        setContacts(Array.isArray(usersRes.data) ? usersRes.data : []);
+      } catch {}
     };
-    syncMessages();
-    const interval = setInterval(syncMessages, 4000); 
+    fetchData();
+    const interval = setInterval(fetchData, 4000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-      if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
   }, [messages, selectedUser]);
 
   const handleSend = async (e) => {
     e.preventDefault();
     if (!inputText.trim() || !user || !selectedUser) return;
     try {
-      await api.post('/messages', { senderId: user.name, receiverId: selectedUser, text: inputText.trim() });
+      await api.post('/messages', { senderId: user.name, receiverId: selectedUser.name, text: inputText.trim() });
       setInputText('');
       const { data } = await api.get('/messages');
       setMessages(Array.isArray(data) ? data : []);
-    } catch (err) {}
+    } catch {}
   };
 
-  if (!user) return <div className="empty-state">Authenticate to engage in Neural Nexus comms.</div>;
+  if (!user) return (
+    <div className="flex h-screen items-center justify-center bg-bg-dark">
+      <div className="empty-state">
+        <h3 className="text-lg font-semibold mb-3">Please log in to view messages</h3>
+        <button className="btn btn-primary" onClick={() => navigate('/login')}>Log In</button>
+      </div>
+    </div>
+  );
 
-  const relevantMessages = messages
-    .filter(m => (m.senderId === user.name && m.receiverId === selectedUser) || (m.senderId === selectedUser && m.receiverId === user.name))
-    .sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+  const getLastMessage = (contactName) => {
+    return messages
+      .filter(m => (m.senderId === user.name && m.receiverId === contactName) || (m.senderId === contactName && m.receiverId === user.name))
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+  };
+
+  const relevantMessages = selectedUser ? messages
+    .filter(m => (m.senderId === user.name && m.receiverId === selectedUser.name) || (m.senderId === selectedUser.name && m.receiverId === user.name))
+    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) : [];
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', background: 'var(--bg-dark)', overflow: 'hidden' }}>
-      
-      {/* Encrypted Contacts List */}
-      <div style={{ width: '320px', borderRight: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', background: 'var(--glass-bg)' }}>
-        <div style={{ padding: '24px', borderBottom: '1px solid var(--glass-border)', fontSize: '20px', fontWeight: '800', fontFamily: 'Poppins' }}>Comms Hub</div>
-        <div style={{ overflowY: 'auto', flex: 1 }}>
-          {networkUsers.filter(u => u !== user.name).map(u => (
-            <div 
-              key={u}
-              onClick={() => setSelectedUser(u)}
-              style={{ 
-                padding: '20px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px',
-                background: selectedUser === u ? 'rgba(255,255,255,0.05)' : 'transparent',
-                borderLeft: selectedUser === u ? '4px solid var(--accent-blue)' : '4px solid transparent',
-                transition: '0.2s ease'
-              }}
-            >
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--bg-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', border: '1px solid var(--glass-border)' }}>
-                {u.charAt(0).toUpperCase()}
-              </div>
-              <div style={{ fontWeight: 'bold', fontSize: '16px' }}>{u}</div>
-            </div>
-          ))}
+    <div className="flex h-screen w-screen overflow-hidden bg-bg-dark">
+
+      {/* LEFT: Contacts */}
+      <div className={`w-[340px] max-md:w-full border-r border-glass-border flex flex-col bg-[rgba(10,10,15,0.95)] ${selectedUser ? 'max-md:hidden' : ''}`}>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-glass-border">
+          <h2 className="text-xl font-bold">Messages</h2>
+          <button onClick={() => navigate('/')} className="bg-transparent border-none text-text-muted cursor-pointer text-sm font-semibold hover:text-white transition-colors">← Home</button>
         </div>
-        <div style={{ padding: '20px', borderTop: '1px solid var(--glass-border)' }}>
-            <button className="btn" style={{ width: '100%' }} onClick={() => window.location.href='/'}>← Back to Nexus</button>
+
+        <div className="overflow-y-auto flex-1">
+          {contacts.filter(c => c.name !== user.name).length === 0 ? (
+            <div className="p-10 text-center text-text-muted text-sm">
+              <div className="text-4xl mb-3 opacity-40">💬</div>
+              No conversations yet
+            </div>
+          ) : (
+            contacts.filter(c => c.name !== user.name).map(contact => {
+              const lastMsg = getLastMessage(contact.name);
+              const isSelected = selectedUser?.name === contact.name;
+              return (
+                <motion.div
+                  key={contact.id}
+                  onClick={() => setSelectedUser(contact)}
+                  className={`flex items-center gap-3.5 px-5 py-3.5 cursor-pointer transition-all duration-150 border-l-3 ${
+                    isSelected
+                      ? 'bg-[rgba(59,130,246,0.08)] border-l-accent'
+                      : 'border-l-transparent hover:bg-[rgba(255,255,255,0.03)]'
+                  }`}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Avatar name={contact.name} image={contact.profileImage} size={48} />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-[15px] mb-0.5">{contact.name}</div>
+                    <div className="text-[13px] text-text-muted truncate">
+                      {lastMsg ? lastMsg.text : 'Start a conversation'}
+                    </div>
+                  </div>
+                  {lastMsg && (
+                    <div className="text-[11px] text-text-muted shrink-0">
+                      {new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })
+          )}
         </div>
       </div>
 
-      {/* Main Encrypted Chat */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-dark)' }}>
+      {/* RIGHT: Chat */}
+      <div className={`flex-1 flex flex-col bg-bg-dark ${!selectedUser ? 'max-md:hidden' : ''}`}>
         {selectedUser ? (
           <>
-            {/* Chat Target Header */}
-            <div style={{ padding: '24px', borderBottom: '1px solid var(--glass-border)', background: 'var(--glass-bg)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#fff', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                    {selectedUser.charAt(0).toUpperCase()}
+            {/* Chat Header */}
+            <div className="flex items-center gap-3.5 px-6 py-4 border-b border-glass-border bg-[rgba(10,10,15,0.9)] backdrop-blur-[10px]">
+              <button onClick={() => setSelectedUser(null)} className="md:hidden bg-transparent border-none text-text-muted cursor-pointer text-lg mr-2">←</button>
+              <Avatar name={selectedUser.name} image={selectedUser.profileImage} size={42} />
+              <div>
+                <h3 className="text-base font-semibold mb-0.5">{selectedUser.name}</h3>
+                <div className="text-xs text-green-500 flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  Active now
                 </div>
-                <div>
-                    <h3 style={{ fontFamily: 'Poppins', fontSize: '18px' }}>{selectedUser}</h3>
-                    <div style={{ fontSize: '12px', color: 'var(--accent-blue)' }}>Encrypted Channel Active</div>
-                </div>
+              </div>
             </div>
-            
-            {/* Chat History Viewport */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-3">
               {relevantMessages.length === 0 ? (
-                <div style={{ textAlign: 'center', color: 'var(--text-muted)', margin: 'auto', padding: '20px', borderRadius: '16px', background: 'var(--glass-bg)' }}>No transmissions established. Secure the channel.</div>
+                <div className="m-auto text-center text-text-muted p-5">
+                  <div className="text-4xl mb-3 opacity-40">👋</div>
+                  <p>No messages yet. Say hello!</p>
+                </div>
               ) : (
-                relevantMessages.map(m => {
+                relevantMessages.map((m, i) => {
                   const isMine = m.senderId === user.name;
                   return (
-                    <div key={m.id} style={{ alignSelf: isMine ? 'flex-end' : 'flex-start', maxWidth: '65%' }}>
-                      <div style={{ 
-                        background: isMine ? 'var(--accent-blue)' : 'var(--glass-bg)', 
-                        padding: '14px 20px', 
-                        borderRadius: isMine ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-                        border: isMine ? 'none' : '1px solid var(--glass-border)',
-                        color: '#fff', wordBreak: 'break-word', fontSize: '15px', lineHeight: '1.4',
-                        boxShadow: isMine ? '0 8px 24px rgba(59,130,246,0.3)' : 'var(--glass-shadow)'
-                      }}>
+                    <motion.div
+                      key={m.id || i}
+                      className={`max-w-[65%] ${isMine ? 'self-end' : 'self-start'}`}
+                      initial={{ opacity: 0, x: isMine ? 16 : -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.25, delay: i * 0.02 }}
+                    >
+                      <div className={`px-4 py-3 text-[15px] leading-relaxed wrap-break-word ${
+                        isMine
+                          ? 'bg-accent rounded-[20px_20px_4px_20px] shadow-[0_4px_16px_var(--color-accent-glow)]'
+                          : 'bg-glass-border rounded-[20px_20px_20px_4px] border border-glass-border'
+                      }`}>
                         {m.text}
                       </div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px', textAlign: isMine ? 'right' : 'left' }}>
-                        {new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      <div className={`text-[11px] text-text-muted mt-1 ${isMine ? 'text-right' : 'text-left'}`}>
+                        {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
-                    </div>
-                  )
+                    </motion.div>
+                  );
                 })
               )}
               <div ref={chatEndRef} />
             </div>
 
-            {/* Encrypt/Send Payload Form */}
-            <form onSubmit={handleSend} style={{ padding: '24px', borderTop: '1px solid var(--glass-border)', display: 'flex', gap: '16px', background: 'var(--glass-bg)', backdropFilter: 'blur(10px)' }}>
-              <input 
-                type="text" 
-                className="form-control"
-                style={{ flex: 1, borderRadius: '24px', padding: '16px 24px' }}
-                placeholder={`Transmitting to ${selectedUser}...`}
+            {/* Input */}
+            <form onSubmit={handleSend} className="flex gap-3 px-6 py-4 border-t border-glass-border bg-[rgba(10,10,15,0.9)] backdrop-blur-[10px]">
+              <input
+                type="text"
+                className="form-control flex-1 rounded-full! py-3! px-5!"
+                placeholder={`Message ${selectedUser.name}...`}
                 value={inputText}
                 onChange={e => setInputText(e.target.value)}
               />
-              <button type="submit" className="btn btn-primary" style={{ borderRadius: '24px', padding: '0 32px' }} disabled={!inputText.trim()}>Send</button>
+              <motion.button
+                type="submit"
+                className="btn btn-primary rounded-full! px-7!"
+                disabled={!inputText.trim()}
+                whileTap={{ scale: 0.95 }}
+              >
+                Send
+              </motion.button>
             </form>
           </>
         ) : (
-          <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px', opacity: 0.5 }}>📡</div>
-            <h2>Neural Comms</h2>
-            <p>Select a contact to establish transmission.</p>
-            <button className="btn" style={{ marginTop: '24px' }} onClick={() => window.location.href='/'}>Return to Hub</button>
+          <div className="m-auto text-center text-text-muted">
+            <div className="text-6xl mb-4 opacity-40">💬</div>
+            <h2 className="text-xl font-semibold mb-2 text-white">Your Messages</h2>
+            <p className="text-sm">Select a conversation to start chatting.</p>
           </div>
         )}
       </div>

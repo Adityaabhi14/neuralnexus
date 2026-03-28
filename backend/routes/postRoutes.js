@@ -1,11 +1,14 @@
-const express = require("express");
-const { getPosts, createPost, likePost, getProfilePosts, commentPost } = require("../controllers/postController");
-
+const express = require('express');
+const { createPost, getPosts, getUserPosts, commentOnPost, likePost, getFeed, searchPosts } = require('../controllers/postController');
+const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
 
-router.route("/").get(getPosts).post(createPost);
-router.route("/profile/:author").get(getProfilePosts);
-router.route("/:id/like").patch(likePost);
-router.route("/:id/comment").post(commentPost);
+router.get('/search', searchPosts);
+router.post('/', protect, createPost);
+router.get('/feed', protect, getFeed);
+router.get('/', getPosts);
+router.get('/:userId', getUserPosts);
+router.post('/:id/comment', protect, commentOnPost);
+router.patch('/:id/like', protect, likePost);
 
 module.exports = router;

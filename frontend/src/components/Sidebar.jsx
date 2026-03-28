@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import SearchBar from './SearchBar';
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -8,9 +9,7 @@ const Sidebar = () => {
   useEffect(() => {
     try {
       const stored = localStorage.getItem('currentUser');
-      if (stored && stored !== "undefined") {
-        setUser(JSON.parse(stored));
-      }
+      if (stored && stored !== "undefined") setUser(JSON.parse(stored));
     } catch {
       localStorage.removeItem('currentUser');
     }
@@ -18,57 +17,66 @@ const Sidebar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('currentUser');
-    window.location.href = '/login'; 
+    window.location.href = '/login';
   };
+
+  const linkClass = ({ isActive }) =>
+    `sidebar-link ${isActive ? 'active' : ''}`;
 
   return (
     <nav className="sidebar">
-      <div style={{ marginBottom: '40px', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', borderRadius: '8px', boxShadow: '0 0 15px rgba(59,130,246,0.5)' }} />
-        <h2 className="brand-font" style={{ fontSize: '22px', fontWeight: '800', letterSpacing: '-0.5px', background: 'linear-gradient(to right, #fff, #9ca3af)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+      {/* Brand */}
+      <div className="brand-section flex items-center gap-3 px-4 py-2 mb-4">
+        <div className="w-8 h-8 rounded-lg bg-linear-to-br from-accent to-[#8b5cf6] shadow-[0_0_12px_rgba(59,130,246,0.5)]" />
+        <h2 className="text-xl font-extrabold tracking-tight bg-linear-to-r from-white to-text-secondary bg-clip-text text-transparent">
           Neural Nexus
         </h2>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-        <NavLink to="/" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-          <span style={{ fontSize: '20px' }}>🔮</span> <span>Nexus Feed</span>
+      <SearchBar />
+
+      {/* Navigation */}
+      <div className="flex flex-col gap-1 flex-1 mt-2">
+        <NavLink to="/" className={linkClass}>
+          <span className="text-xl">🏠</span> <span>Home</span>
         </NavLink>
-        <NavLink to="/explore" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-          <span style={{ fontSize: '20px' }}>🌍</span> <span>Discover</span>
+        <NavLink to="/explore" className={linkClass}>
+          <span className="text-xl">🔍</span> <span>Explore</span>
         </NavLink>
-        
+
         {user && (
           <>
-            <NavLink to="/messages" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-              <span style={{ fontSize: '20px' }}>💬</span> <span>Comms</span>
+            <NavLink to="/messages" className={linkClass}>
+              <span className="text-xl">💬</span> <span>Messages</span>
             </NavLink>
-            <NavLink to={`/profile/${user.name}`} className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-              <span style={{ fontSize: '20px' }}>👤</span> <span>Identity</span>
+            <NavLink to={`/profile/${user.name}`} className={linkClass}>
+              <span className="text-xl">👤</span> <span>Profile</span>
             </NavLink>
-            
-            {user.role === 'creator' && (
-              <NavLink to="/create" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} style={{ marginTop: '24px', border: '1px solid rgba(59,130,246,0.3)', background: 'rgba(59,130,246,0.05)' }}>
-                <span style={{ fontSize: '20px' }}>✨</span> <span>Broadcast</span>
-              </NavLink>
-            )}
+            <NavLink
+              to="/create"
+              className={linkClass}
+              style={{ marginTop: '8px' }}
+            >
+              <span className="text-xl">➕</span> <span>Create Post</span>
+            </NavLink>
           </>
         )}
       </div>
 
+      {/* Footer */}
       {!user ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => navigate('/login')}>Initialize Uplink</button>
-        </div>
+        <button className="btn btn-primary w-full" onClick={() => navigate('/login')}>Log In</button>
       ) : (
-        <div className="card" style={{ padding: '16px', marginBottom: '0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#333' }}>
-                <img src={user.profileImage || `https://ui-avatars.com/api/?name=${user.name}&background=111&color=fff`} style={{ width:'100%', height:'100%', borderRadius:'50%', objectFit:'cover' }} alt="Avatar" />
+        <div className="card mb-0! p-4!">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-full overflow-hidden bg-[#333] shrink-0">
+              <img src={user.profileImage || `https://ui-avatars.com/api/?name=${user.name}&background=111&color=fff`} className="w-full h-full object-cover" alt="" />
             </div>
-            <div style={{ fontWeight: '600', fontSize: '14px' }}>{user.name}</div>
+            <div className="font-semibold text-sm truncate">{user.name}</div>
           </div>
-          <button onClick={handleLogout} style={{ background: 'transparent', border: 'none', color: '#fca5a5', fontWeight: '600', cursor: 'pointer', textAlign: 'left', padding: '8px 0', fontSize: '13px' }}>Terminate Sector</button>
+          <button onClick={handleLogout} className="text-red-400 font-semibold text-xs cursor-pointer bg-transparent border-none hover:text-red-300 transition-colors">
+            Log Out
+          </button>
         </div>
       )}
     </nav>

@@ -5,7 +5,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Safe parsing block 
   let user = null;
   try {
     const userStr = localStorage.getItem('currentUser');
@@ -13,7 +12,6 @@ const Navbar = () => {
       user = JSON.parse(userStr);
     }
   } catch (error) {
-    console.warn("Failed to parse currentUser from localStorage", error);
     localStorage.removeItem("currentUser"); 
   }
 
@@ -26,10 +24,10 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
-      <Link to="/" className="navbar-brand">Nexus AI</Link>
+      <Link to="/" className="navbar-brand">Neural Nexus</Link>
       <div className="navbar-links">
-        <Link to="/" className={isActive('/')}>Feed</Link>
-        <Link to="/explore" className={isActive('/explore')}>Explore Q&A</Link>
+        <Link to="/" className={isActive('/')}>Home</Link>
+        <Link to="/explore" className={isActive('/explore')}>Explore</Link>
         
         {user ? (
           <>
@@ -38,12 +36,17 @@ const Navbar = () => {
             )}
             <Link to={`/profile/${user.name}`} className={isActive(`/profile/${user.name}`)}>Profile</Link>
             
-            <div className="nav-user" style={{ marginLeft: '1rem' }}>👋 {user.name}</div>
+            <div style={{ marginLeft: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '28px', height: '28px', borderRadius: '50%', overflow: 'hidden', background: '#333' }}>
+                <img src={user.profileImage || `https://ui-avatars.com/api/?name=${user.name}&background=111&color=fff&size=28`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+              </div>
+              <span style={{ fontWeight: '600', fontSize: '14px' }}>{user.name}</span>
+            </div>
             <button 
               onClick={handleLogout} 
               style={{ background:'none', border:'none', color:'#ef4444', fontWeight:'600', cursor:'pointer' }}
             >
-              Sign Out
+              Log Out
             </button>
           </>
         ) : (

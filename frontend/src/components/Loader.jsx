@@ -2,11 +2,9 @@ import React from 'react';
 
 const Loader = ({ message = "Loading..." }) => {
   return (
-    <div className="spinner-container">
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-        <div className="spinner"></div>
-        <div style={{ color: '#64748b', fontWeight: '500' }}>{message}</div>
-      </div>
+    <div className="flex flex-col items-center justify-center py-16 gap-4">
+      <div className="w-8 h-8 border-2 border-card-border border-t-accent rounded-full animate-spin" />
+      <div className="text-sm text-text-muted font-medium">{message}</div>
     </div>
   );
 };

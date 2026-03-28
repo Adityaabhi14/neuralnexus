@@ -1,27 +1,38 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import api from '../services/api';
 import PostCard from '../components/PostCard';
-import QuestionCard from '../components/QuestionCard';
+
+const SkeletonCard = () => (
+  <div className="card p-0! overflow-hidden">
+    <div className="flex items-center gap-3 p-4">
+      <div className="skeleton w-9 h-9 rounded-full" />
+      <div className="flex-1">
+        <div className="skeleton h-3 w-24 mb-2 rounded" />
+        <div className="skeleton h-2 w-16 rounded" />
+      </div>
+    </div>
+    <div className="skeleton w-full h-80" />
+    <div className="p-4">
+      <div className="skeleton h-3 w-20 mb-3 rounded" />
+      <div className="skeleton h-3 w-full mb-2 rounded" />
+      <div className="skeleton h-3 w-3/4 rounded" />
+    </div>
+  </div>
+);
 
 const Home = () => {
-  const [feed, setFeed] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchFeed = async () => {
       try {
-        const [postsData, questionsData] = await Promise.all([
-            api.get('/posts').catch(() => ({ data: [] })),
-            api.get('/questions').catch(() => ({ data: [] }))
-        ]);
-        
-        const rawP = Array.isArray(postsData.data) ? postsData.data.map(p => ({...p, type: 'post'})) : [];
-        const rawQ = Array.isArray(questionsData.data) ? questionsData.data.map(q => ({...q, type: 'question'})) : [];
-        
-        setFeed([...rawP, ...rawQ].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)));
+        const { data } = await api.get('/posts');
+        setPosts(Array.isArray(data) ? data : []);
       } catch (err) {
-        setError('Failed to load feed.');
+        setError(err.response?.data?.message || 'Failed to load feed.');
       } finally {
         setLoading(false);
       }
@@ -30,41 +41,41 @@ const Home = () => {
   }, []);
 
   const handleLike = async (id) => {
-    let userStr = localStorage.getItem('currentUser');
-    if (!userStr || userStr === "undefined") return alert('Sign in to interact.');
-    try { await api.patch(`/posts/${id}/like`); } catch (err) { console.error("Like transmission failed"); }
+    const str = localStorage.getItem('currentUser');
+    if (!str || str === "undefined") return;
+    try {
+      const { data } = await api.patch(`/posts/${id}/like`);
+      setPosts(prev => prev.map(p => p.id === id ? { ...p, likes: data.likes } : p));
+    } catch (err) {
+      console.error("Like failed:", err);
+    }
   };
-
-  const handleUpvote = async (id) => {
-    let userStr = localStorage.getItem('currentUser');
-    if (!userStr || userStr === "undefined") return alert('Sign in to interact.');
-    try { await api.patch(`/questions/${id}/upvote`); } catch (err) { console.error("Upvote failed"); }
-  }
 
   return (
     <div>
-      {/* Skeleton Feed loading state seamlessly matching standard background components */}
+      {/* Skeleton Loaders */}
       {loading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {[1,2].map(i => (
-             <div key={i} className="card" style={{ height: '300px', opacity: 0.5, animation: 'pulse 1.5s infinite ease-in-out' }} />
-          ))}
-          <style>{`@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 0.2; } 100% { opacity: 0.5; } }`}</style>
+        <div className="flex flex-col gap-5">
+          {[1, 2, 3].map(i => <SkeletonCard key={i} />)}
         </div>
       )}
-      
+
       {!loading && error && <div className="alert-error">{error}</div>}
 
-      {!loading && feed.length === 0 && !error ? (
-        <div className="empty-state">
-          <h3>Your Feed is Empty</h3>
-          <p>Posts and discussions will appear here.</p>
-        </div>
+      {!loading && posts.length === 0 && !error ? (
+        <motion.div
+          className="empty-state"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className="text-5xl mb-4 opacity-50">📸</div>
+          <h3 className="text-lg font-semibold mb-1">No Posts Yet</h3>
+          <p className="text-text-muted text-sm">Follow creators to see their posts here.</p>
+        </motion.div>
       ) : (
-        !loading && feed.map(item => (
-            item.type === 'post' 
-               ? <PostCard key={`post-${item.id}`} post={item} onLike={handleLike} />
-               : <QuestionCard key={`q-${item.id}`} question={item} onClick={() => window.location.href=`/question/${item.id}`} onUpvote={handleUpvote} />
+        !loading && posts.map((post, index) => (
+          <PostCard key={post.id} post={post} onLike={handleLike} index={index} />
         ))
       )}
     </div>

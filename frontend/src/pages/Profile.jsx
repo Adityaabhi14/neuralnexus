@@ -35,7 +35,7 @@ const Profile = () => {
         const postsData = await api.get(`/posts/profile/${username}`);
         setPosts(Array.isArray(postsData.data?.posts) ? postsData.data.posts : []);
       } catch (err) {
-        console.error("Profile payload crash avoided.");
+        console.error("Failed to load profile.");
       } finally {
         setLoading(false);
       }
@@ -44,7 +44,7 @@ const Profile = () => {
   }, [username]);
 
   const handleFollow = async () => {
-      if (!currentUser) return alert('Initialize Identity module first.');
+      if (!currentUser) return alert('Please log in first.');
       const safeFollowers = Array.isArray(profile.followers) ? profile.followers : [];
       const isFollowing = safeFollowers.includes(currentUser.name);
       
@@ -59,7 +59,7 @@ const Profile = () => {
   const handleFileSelection = (e) => {
       const file = e.target.files[0];
       if (file) {
-          if (!file.type.startsWith('image/')) return alert('Please exclusively select image binaries.');
+          if (!file.type.startsWith('image/')) return alert('Please select an image file.');
           setProfileImageFile(file);
           setImagePreview(URL.createObjectURL(file));
       }
@@ -76,7 +76,7 @@ const Profile = () => {
               const uploadRes = await api.post('/upload/profile', formData, {
                   headers: { 'Content-Type': 'multipart/form-data' }
               });
-              updatedImageUrl = `http://localhost:5000${uploadRes.data.url}`;
+              updatedImageUrl = uploadRes.data.url;
           }
 
           const { data } = await api.patch('/users/profile', { name: profile.name, bio: editBio, profileImage: updatedImageUrl });
@@ -86,12 +86,12 @@ const Profile = () => {
               localStorage.setItem('currentUser', JSON.stringify({...currentUser, profileImage: data.profileImage}));
           }
           setIsEditing(false);
-      } catch { alert('Transmission failed.'); } 
+      } catch { alert('Failed to save. Please try again.'); } 
       finally { setSaving(false); }
   }
 
-  if (loading) return <div className="empty-state">Establishing connection to Neural Grid...</div>;
-  if (!profile) return <div className="empty-state">Identity matrix explicitly unresolved.</div>;
+  if (loading) return <div className="empty-state">Loading profile...</div>;
+  if (!profile) return <div className="empty-state">User not found.</div>;
 
   const isOwner = currentUser?.name === profile.name;
   const safeFollowers = Array.isArray(profile.followers) ? profile.followers : [];
@@ -127,30 +127,30 @@ const Profile = () => {
 
             <h1 style={{ fontSize: '28px', fontWeight: '700', fontFamily: 'Poppins', marginBottom: '8px' }}>{profile.name}</h1>
             <div style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--accent-blue)', marginBottom: '16px' }}>
-                {profile.role === 'creator' ? 'Nexus Creator' : 'Standard Node'}
+                {profile.role === 'creator' ? 'Creator' : 'Member'}
             </div>
 
             <div style={{ display: 'flex', gap: '32px', marginBottom: '24px', fontSize: '15px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ fontWeight: '800', fontSize: '20px' }}>{posts.length}</span> <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Broadcasts</span></div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ fontWeight: '800', fontSize: '20px' }}>{safeFollowers.length}</span> <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Connections</span></div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ fontWeight: '800', fontSize: '20px' }}>{posts.length}</span> <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Posts</span></div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ fontWeight: '800', fontSize: '20px' }}>{safeFollowers.length}</span> <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Followers</span></div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ fontWeight: '800', fontSize: '20px' }}>{safeFollowing.length}</span> <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Following</span></div>
             </div>
 
             {isEditing ? (
                 <div style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <textarea className="form-control" placeholder="Update bio..." value={editBio} onChange={e=>setEditBio(e.target.value)} style={{ minHeight: '100px', resize: 'vertical' }} />
-                    <button className="btn btn-primary" onClick={saveProfile} disabled={saving}>{saving ? 'Transmitting Data...' : 'Save Configuration'}</button>
-                    <button className="btn" onClick={() => setIsEditing(false)}>Cancel Processing</button>
+                    <button className="btn btn-primary" onClick={saveProfile} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</button>
+                    <button className="btn" onClick={() => setIsEditing(false)}>Cancel</button>
                 </div>
             ) : (
                 <div style={{ width: '100%', maxWidth: '500px', marginBottom: '24px' }}>
-                    <div style={{ fontSize: '15px', lineHeight: '1.6', color: '#e5e7eb', whiteSpace: 'pre-line' }}>{profile.bio || "No biography provided in matrix."}</div>
+                    <div style={{ fontSize: '15px', lineHeight: '1.6', color: '#e5e7eb', whiteSpace: 'pre-line' }}>{profile.bio || "No bio yet."}</div>
                     <div style={{ marginTop: '24px' }}>
                         {isOwner ? (
-                            <button className="btn btn-primary" onClick={() => setIsEditing(true)}>Reconfigure Profile</button>
+                            <button className="btn btn-primary" onClick={() => setIsEditing(true)}>Edit Profile</button>
                         ) : (
-                            <button className="btn btn-primary" onClick={handleFollow} style={{ background: amIFollowing ? 'var(--glass-bg)' : 'var(--accent-blue)', color: '#fff', border: amIFollowing ? '1px solid var(--glass-border)' : 'none', width: '150px' }}>
-                                {amIFollowing ? 'Connected' : 'Connect'}
+                            <button className="btn btn-primary" onClick={handleFollow} style={{ background: amIFollowing ? 'var(--glass-bg)' : 'var(--accent-blue)', color: '#fff', border: amIFollowing ? '1px solid var(--glass-border)' : 'none', width: '150px', borderRadius: '10px' }}>
+                                {amIFollowing ? 'Following' : 'Follow'}
                             </button>
                         )}
                     </div>
@@ -160,11 +160,11 @@ const Profile = () => {
 
         {/* Global Explicit Grid View */}
         <div style={{ marginTop: '48px', paddingBottom: '64px' }}>
-            <h3 className="brand-font" style={{ fontSize: '18px', textAlign: 'center', marginBottom: '32px', letterSpacing: '1px' }}>BROADCAST ARCHIVES</h3>
+            <h3 className="brand-font" style={{ fontSize: '18px', textAlign: 'center', marginBottom: '32px', letterSpacing: '1px' }}>POSTS</h3>
             {posts.length === 0 ? (
                 <div className="empty-state" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '16px' }}>
                     <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>📷</div>
-                    <h3 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text-primary)' }}>No Archives Found</h3>
+                    <h3 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text-primary)' }}>No posts yet</h3>
                 </div>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>

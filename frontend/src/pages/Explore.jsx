@@ -1,121 +1,102 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import api from '../services/api';
-import QuestionCard from '../components/QuestionCard';
-import Loader from '../components/Loader';
+import PostCard from '../components/PostCard';
 
 const Explore = () => {
-  const [questions, setQuestions] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
-  
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchQuestions = async () => {
+    const fetchPosts = async () => {
       try {
-        const { data } = await api.get('/questions');
-        if (Array.isArray(data)) {
-          setQuestions(data);
-        } else {
-          console.warn("API did not return an array. Creating empty safely.", data);
-          setQuestions([]);
-        }
+        const { data } = await api.get('/posts');
+        setPosts(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("Explore Page Fetch Error:", err);
-        setError(err.response?.data?.message || 'We could not fetch the latest questions at this time.');
-        setQuestions([]);
+        setError(err.response?.data?.message || 'Failed to fetch posts.');
+        setPosts([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchQuestions();
+    fetchPosts();
   }, []);
 
-  const handleUpvote = async (id) => {
+  const handleLike = async (id) => {
+    const str = localStorage.getItem('currentUser');
+    if (!str || str === "undefined") return;
     try {
-      let userStr = localStorage.getItem('currentUser');
-      if (!userStr || userStr === "undefined") {
-        alert('You must sign in to upvote questions.');
-        return;
-      }
-
-      setQuestions(prev => Array.isArray(prev) ? prev.map(q => q.id === id ? { ...q, upvotes: (q.upvotes || 0) + 1 } : q) : []);
-      await api.patch(`/questions/${id}/upvote`);
-    } catch (err) {
-      console.error('Failed to upvote', err);
-      setQuestions(prev => Array.isArray(prev) ? prev.map(q => q.id === id ? { ...q, upvotes: Math.max((q.upvotes || 0) - 1, 0) } : q) : []);
-    }
+      const { data } = await api.patch(`/posts/${id}/like`);
+      setPosts(prev => prev.map(p => p.id === id ? { ...p, likes: data.likes } : p));
+    } catch {}
   };
 
-  const filteredQuestions = useMemo(() => {
-    const safeQuestions = Array.isArray(questions) ? questions : [];
-    const lowerSearch = (search || '').trim().toLowerCase();
-    
-    if (!lowerSearch) return safeQuestions;
-    
-    return safeQuestions.filter(q => {
-      const qTitle = (q.title || '').toLowerCase();
-      const qBody = (q.body || '').toLowerCase();
-      return qTitle.includes(lowerSearch) || qBody.includes(lowerSearch);
-    });
-  }, [questions, search]);
+  const filteredPosts = useMemo(() => {
+    const lower = (search || '').trim().toLowerCase();
+    if (!lower) return posts;
+    return posts.filter(p => (p.content || '').toLowerCase().includes(lower));
+  }, [posts, search]);
 
   return (
-    <div>
-    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+    <div className="max-w-[800px] mx-auto">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
         <div>
-            <h1 className="brand-font" style={{ fontSize: '28px', marginBottom: '8px' }}>Neural Discover</h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Explore the collective intelligence of the Nexus.</p>
+          <h1 className="text-2xl font-bold mb-1">Explore</h1>
+          <p className="text-sm text-text-muted">Discover new posts and creators.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => navigate('/ask')}>Start Discussion</button>
+        <button className="btn btn-primary" onClick={() => navigate('/create')}>New Post</button>
       </div>
 
-      <div style={{ position: 'relative', marginBottom: '48px' }}>
-        <input 
-          type="text" 
-          className="form-control" 
-          placeholder="Filter the neural grid..."
+      {/* Search */}
+      <div className="relative mb-10">
+        <input
+          type="text"
+          className="form-control rounded-full! py-3.5! pl-14! text-base!"
+          placeholder="Search posts..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ 
-              borderRadius: '24px', 
-              padding: '16px 24px 16px 56px', 
-              fontSize: '16px', 
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(10px)'
-          }}
         />
-        <div style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '20px' }}>🔍</div>
+        <div className="absolute left-5 top-1/2 -translate-y-1/2 opacity-50 text-xl">🔍</div>
       </div>
 
-      {loading && <Loader message="Fetching community discussions..." />}
-      
-      {!loading && error && (
-        <div className="alert-error">
-          <strong>Backend Connection Error:</strong> {error}
+      {/* Loading */}
+      {loading && (
+        <div className="flex flex-col gap-5">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="card p-0! overflow-hidden">
+              <div className="flex items-center gap-3 p-4">
+                <div className="skeleton w-9 h-9 rounded-full" />
+                <div className="flex-1"><div className="skeleton h-3 w-24 rounded" /></div>
+              </div>
+              <div className="skeleton w-full h-64" />
+            </div>
+          ))}
         </div>
       )}
 
-      {!loading && filteredQuestions.length === 0 && !error ? (
-        <div className="empty-state">
-          <h3>No insights found.</h3>
-          <p style={{ marginTop: '0.5rem' }}>Be the first to initiate a topic and share knowledge!</p>
-        </div>
+      {!loading && error && <div className="alert-error"><strong>Error:</strong> {error}</div>}
+
+      {!loading && filteredPosts.length === 0 && !error ? (
+        <motion.div
+          className="empty-state"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <div className="text-5xl mb-4 opacity-50">📡</div>
+          <h3 className="text-lg font-semibold mb-1">No posts found.</h3>
+          <p className="text-sm text-text-muted">Be the first to share something!</p>
+        </motion.div>
       ) : (
-        !loading && filteredQuestions.map(q => (
-          <QuestionCard 
-            key={q.id} 
-            question={q || {}} 
-            onClick={() => navigate(`/question/${q.id}`)}
-            onUpvote={handleUpvote}
-          />
+        !loading && filteredPosts.map((post, index) => (
+          <PostCard key={post.id} post={post} onLike={handleLike} index={index} />
         ))
       )}
     </div>
-  </div>
   );
 };
 

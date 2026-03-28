@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 
 const FloatingAI = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { text: "Welcome to Neural Nexus. How can I augment your experience today?", isBot: true }
+    { text: "Hi! I'm your AI assistant. How can I help you today?", isBot: true }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  
   const endRef = useRef(null);
 
   useEffect(() => {
@@ -18,27 +18,15 @@ const FloatingAI = () => {
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
-
     const userMsg = input.trim();
     setMessages(prev => [...prev, { text: userMsg, isBot: false }]);
     setInput('');
     setLoading(true);
-
     try {
-      // 1. CALL REAL AI HUB API
       const { data } = await api.post('/ai/chat', { message: userMsg });
-      
-      // 2. MAP REAL AI RESPONSE
-      setMessages(prev => [...prev, { 
-          text: data.reply || "Connection fragmented. AI Uplink error.", 
-          isBot: true 
-      }]);
-    } catch (error) {
-      console.error("AI Node offline.");
-      setMessages(prev => [...prev, { 
-          text: "Protocol Error: Nexus AI neural handshake failed. Ensure API key is persistent.", 
-          isBot: true 
-      }]);
+      setMessages(prev => [...prev, { text: data.reply || "Something went wrong. Please try again.", isBot: true }]);
+    } catch {
+      setMessages(prev => [...prev, { text: "AI is currently unavailable. Please try again later.", isBot: true }]);
     } finally {
       setLoading(false);
     }
@@ -46,62 +34,76 @@ const FloatingAI = () => {
 
   return (
     <div className="ai-chatbot-container">
-      {isOpen && (
-        <div className="ai-window">
-          {/* Header */}
-          <div style={{ padding: '16px 20px', background: 'rgba(59, 130, 246, 0.1)', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }} />
-                <span style={{ fontWeight: '700', fontFamily: 'Poppins', fontSize: '15px' }}>Nexus AI</span>
-            </div>
-            <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '18px' }}>✕</button>
-          </div>
-          
-          {/* Chat Readout */}
-          <div style={{ height: '350px', overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {messages.map((m, i) => (
-              <div key={i} style={{
-                alignSelf: m.isBot ? 'flex-start' : 'flex-end',
-                background: m.isBot ? 'rgba(255,255,255,0.05)' : 'var(--accent-blue)',
-                padding: '12px 16px',
-                borderRadius: m.isBot ? '4px 16px 16px 16px' : '16px 16px 4px 16px',
-                maxWidth: '85%',
-                fontSize: '14px',
-                border: m.isBot ? '1px solid var(--glass-border)' : 'none',
-                boxShadow: m.isBot ? 'none' : '0 4px 15px rgba(59,130,246,0.3)',
-                animation: 'fadeIn 0.3s ease-out'
-              }}>
-                {m.text}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="ai-window"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-card-border">
+              <div className="flex items-center gap-2.5">
+                <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_#22c55e]" />
+                <span className="font-bold text-sm">AI Assistant</span>
               </div>
-            ))}
-            {loading && (
-                <div style={{ alignSelf: 'flex-start', color: 'var(--accent-blue)', fontSize: '12px', background: 'var(--glass-bg)', padding: '8px 16px', borderRadius: '16px', border: '1px solid var(--glass-border)', animation: 'pulse 1.5s infinite' }}>
-                    Thinking...
-                </div>
-            )}
-            <div ref={endRef} />
-          </div>
+              <button onClick={() => setIsOpen(false)} className="bg-transparent border-none text-text-muted cursor-pointer text-lg hover:text-white transition-colors">✕</button>
+            </div>
 
-          {/* Input Form */}
-          <form style={{ display: 'flex', padding: '16px', borderTop: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)' }} onSubmit={handleSend}>
-            <input 
-              type="text" 
-              placeholder="Ask the Nexus AI..." 
-              style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', padding: '12px 16px', color: '#fff', borderRadius: '20px 0 0 20px', outline: 'none' }}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              disabled={loading}
-            />
-            <button type="submit" disabled={loading || !input.trim()} style={{ background: 'var(--accent-blue)', border: 'none', color: '#fff', padding: '0 20px', borderRadius: '0 20px 20px 0', cursor: 'pointer', fontWeight: 'bold' }}>
-              Send
-            </button>
-          </form>
-        </div>
-      )}
+            {/* Messages */}
+            <div className="h-[350px] overflow-y-auto p-5 flex flex-col gap-3">
+              {messages.map((m, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: m.isBot ? -12 : 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.25, delay: 0.05 }}
+                  className={`max-w-[85%] px-4 py-3 text-sm leading-relaxed ${
+                    m.isBot
+                      ? 'self-start rounded-[4px_16px_16px_16px] bg-bg-deeper border border-card-border'
+                      : 'self-end rounded-[16px_16px_4px_16px] bg-accent shadow-[0_4px_12px_var(--color-accent-glow)]'
+                  }`}
+                >
+                  {m.text}
+                </motion.div>
+              ))}
+              {loading && (
+                <div className="self-start text-accent text-xs bg-card px-4 py-2 rounded-2xl border border-card-border animate-pulse">
+                  Thinking...
+                </div>
+              )}
+              <div ref={endRef} />
+            </div>
+
+            {/* Input */}
+            <form className="flex p-4 border-t border-card-border bg-[rgba(0,0,0,0.15)]" onSubmit={handleSend}>
+              <input
+                type="text"
+                placeholder="Ask me anything..."
+                className="flex-1 bg-bg-deeper border border-card-border px-4 py-3 text-white rounded-l-full outline-none text-sm placeholder:text-text-muted"
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                disabled={loading}
+              />
+              <button type="submit" disabled={loading || !input.trim()} className="bg-accent border-none text-white px-5 rounded-r-full cursor-pointer font-bold text-sm hover:bg-accent-hover transition-colors disabled:opacity-40">
+                Send
+              </button>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {!isOpen && (
-          <button className="ai-toggle-btn" onClick={() => setIsOpen(true)}>
-            <div style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>✨</div>
-          </button>
+        <motion.button
+          className="ai-toggle-btn"
+          onClick={() => setIsOpen(true)}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          ✨
+        </motion.button>
       )}
     </div>
   );

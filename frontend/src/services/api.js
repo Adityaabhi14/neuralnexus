@@ -9,6 +9,20 @@ const api = axios.create({
   },
 });
 
+// Inject JWT Authorization header on every request automatically
+api.interceptors.request.use((config) => {
+  try {
+    const str = localStorage.getItem('currentUser');
+    if (str && str !== 'undefined') {
+      const user = JSON.parse(str);
+      if (user.token) {
+        config.headers.Authorization = `Bearer ${user.token}`;
+      }
+    }
+  } catch {}
+  return config;
+});
+
 // Add a global interceptor to catch any failing network requests gracefully
 api.interceptors.response.use(
   (response) => {

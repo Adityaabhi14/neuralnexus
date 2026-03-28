@@ -34,5 +34,65 @@
     "password": "$2b$10$PeDtEwQNtu1rs9ALBm7ZfeuE/eIscxYSHbFS5GuIwXAcIi8BoxUBu",
     "createdAt": "2026-03-28T14:04:02.107Z",
     "profileImage": "http://localhost:5000/uploads/1774708583901-mikey.jpeg"
+  },
+  {
+    "id": "fd49cc41-13db-4f75-bf81-64f133a32be3",
+    "name": "PADMAVARI ADITYA",
+    "email": "padmavariaditya25@ifheindia.org",
+    "password": "$2b$10$vDekEuXMPmnzggpNm6wqqusk3hoQnzXNe/XHyakF70Ama8.yTxJyy",
+    "role": "user",
+    "subscription": "Free",
+    "profileImage": "https://lh3.googleusercontent.com/a/ACg8ocIaiVp6RTTPfSxR-5q4gwKPgd5IBRMJRIA9uphuZoE6O3zXY2g=s96-c",
+    "followers": [],
+    "following": [],
+    "createdAt": "2026-03-28T17:41:45.211Z"
+  },
+  {
+    "id": "9188717b-9e5c-4e2d-b909-0b414ef39121",
+    "name": "test1",
+    "email": "ashmitha25@ifheindia.org",
+    "password": "$2b$10$kWFcMWIDXUHPwrUvy42hFOymVfGs/MZ4TwIR9F1qrXBXIInbbEoFe",
+    "role": "creator",
+    "subscription": "Free",
+    "profileImage": "",
+    "followers": [],
+    "following": [],
+    "createdAt": "2026-03-28T17:43:23.696Z"
+  },
+  {
+    "id": "a413c81b-d914-42a1-9968-84c8e64567bf",
+    "name": "amanda",
+    "email": "hustlelabai5@gmail.com",
+    "password": "$2b$10$WT.LRutVsx3TPRIhNtHZD.kb.W0sHMjNc0IDM6VdXVnYkbWqObNVy",
+    "role": "user",
+    "subscription": "Free",
+    "profileImage": "",
+    "followers": [],
+    "following": [],
+    "createdAt": "2026-03-28T17:48:31.765Z"
+  },
+  {
+    "id": "517d0eac-89c6-455e-90ff-73c33fd38312",
+    "name": "snehith",
+    "email": "billinaremood@gmail.com",
+    "password": "$2b$10$lfJiJNj11/wlFPtu.J6W6O7V3157ot4upJsIK8Wme/ktsQbcmqrPa",
+    "role": "user",
+    "subscription": "Free",
+    "profileImage": "",
+    "followers": [],
+    "following": [],
+    "createdAt": "2026-03-28T17:51:22.703Z"
+  },
+  {
+    "id": "c148d41a-f142-45ed-88d7-5c44125b8c51",
+    "name": "bellore",
+    "email": "bellore.shop42@gmail.com",
+    "password": "$2b$10$qZhr7axRDGMU3kgl0x3V3OYX3LQdnULAMKbEz.X6XgfX.nRFDge6u",
+    "role": "creator",
+    "subscription": "Free",
+    "profileImage": "",
+    "followers": [],
+    "following": [],
+    "createdAt": "2026-03-28T17:55:39.231Z"
   }
 ]
