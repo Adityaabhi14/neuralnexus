@@ -1,7 +1,14 @@
-export default function Loader() {
+import React from 'react';
+
+const Loader = ({ message = "Loading..." }) => {
   return (
-    <div className="flex justify-center items-center py-20">
-      <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+    <div className="spinner-container">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+        <div className="spinner"></div>
+        <div style={{ color: '#64748b', fontWeight: '500' }}>{message}</div>
+      </div>
     </div>
-  )
-}
+  );
+};
+
+export default Loader;

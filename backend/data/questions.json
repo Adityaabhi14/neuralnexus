@@ -1,0 +1,17 @@
+[
+  {
+    "id": "q1",
+    "title": "How to set up JSON server?",
+    "body": "I am trying to use fs to serve JSON endpoints on node. Any tips?",
+    "author": "Alice",
+    "createdAt": "2023-11-20T10:00:00.000Z",
+    "upvotes": 14
+  },
+  {
+    "id": "q2",
+    "title": "React vs Vue?",
+    "body": "What are the main differences out of the box?",
+    "author": "Bob",
+    "createdAt": "2023-11-21T12:00:00.000Z"
+  }
+]

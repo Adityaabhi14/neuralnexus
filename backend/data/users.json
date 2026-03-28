@@ -1,0 +1,38 @@
+[
+  {
+    "id": "u1",
+    "name": "Frontend Teammate",
+    "email": "dev@example.com",
+    "password": "$2a$10$w09uYc.n2147w92e4D28Auv1B3JEqi/wXlJ/P.t0B.yM3tY4X3aXK",
+    "createdAt": "2023-11-20T10:00:00.000Z"
+  },
+  {
+    "id": "84ec0fa0-505a-4d26-8f11-717adae70b77",
+    "name": "aditya",
+    "email": "adityaabhi301@gmail.com",
+    "password": "$2b$10$MuiSOsBC.lCE/Nmfm1MT5.iP7/WBcSoYnynj1sOkpXuOFtl1oltJ2",
+    "createdAt": "2026-03-28T13:22:53.188Z"
+  },
+  {
+    "id": "5a95ec5e-91e6-424f-9d8e-a3359bbed78f",
+    "name": "abhi",
+    "email": "padityapaditya99@gmail.com",
+    "role": "creator",
+    "bio": "",
+    "followers": 0,
+    "password": "$2b$10$8FjnqsgofUTlQSIH.snaAuwdkqCZiK5ssXqLTBPPQnAvXo22rq.x6",
+    "createdAt": "2026-03-28T13:32:47.887Z",
+    "profileImage": "http://localhost:5000/uploads/1774709988888-mikey.jpeg"
+  },
+  {
+    "id": "2bec469c-5891-4c4a-a149-46bbcf6f3eb1",
+    "name": "abhiis",
+    "email": "aditya.techie1407@gmail.com",
+    "role": "creator",
+    "bio": "aditya",
+    "followers": 0,
+    "password": "$2b$10$PeDtEwQNtu1rs9ALBm7ZfeuE/eIscxYSHbFS5GuIwXAcIi8BoxUBu",
+    "createdAt": "2026-03-28T14:04:02.107Z",
+    "profileImage": "http://localhost:5000/uploads/1774708583901-mikey.jpeg"
+  }
+]

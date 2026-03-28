@@ -1,0 +1,30 @@
+[
+  {
+    "id": "a1",
+    "questionId": "q1",
+    "text": "You can use fs.readFileSync and parse the JSON. Just make sure to format it back on writes.",
+    "author": "Charlie",
+    "createdAt": "2023-11-20T11:00:00.000Z"
+  },
+  {
+    "id": "a2",
+    "questionId": "q1",
+    "text": "Check out lowdb or just use the fs promises module for async I/O.",
+    "author": "Dave",
+    "createdAt": "2023-11-20T13:00:00.000Z"
+  },
+  {
+    "id": "4c4a3e65-283d-40a6-aa4e-b13d12503596",
+    "questionId": "q2",
+    "text": "Based on the context discussed, the optimal solution usually involves leveraging decoupled architecture and ensuring tight strict mode integrations with the local runtime. Let me know if you need specific script mappings for this exact issue! 🚀",
+    "author": "✨ AI Assistant",
+    "createdAt": "2026-03-28T13:43:08.168Z"
+  },
+  {
+    "id": "1349e35c-346d-4824-9d2f-45fe838bbb31",
+    "questionId": "q2",
+    "text": "Based on the context discussed, the optimal solution usually involves leveraging decoupled architecture and ensuring tight strict mode integrations with the local runtime. Let me know if you need specific script mappings for this exact issue! 🚀",
+    "author": "✨ AI Assistant",
+    "createdAt": "2026-03-28T13:43:15.568Z"
+  }
+]

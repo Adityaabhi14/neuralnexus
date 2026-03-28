@@ -1,22 +1,21 @@
 const express = require("express");
-const router = express.Router();
-const {
-  createQuestion,
-  getAllQuestions,
-  upvoteQuestion,
-  getTopQuestions,
+const { 
+  getQuestions, 
+  getQuestionById, 
+  createQuestion, 
+  upvoteQuestion 
 } = require("../controllers/questionController");
 
-// GET /api/questions/top — Top-ranked questions (must be BEFORE /:id routes)
-router.get("/top", getTopQuestions);
+const router = express.Router();
 
-// POST /api/questions — Submit a new question
-router.post("/", createQuestion);
+router.route("/")
+  .get(getQuestions)
+  .post(createQuestion);
 
-// GET /api/questions — Get all questions
-router.get("/", getAllQuestions);
+router.route("/:id")
+  .get(getQuestionById);
 
-// POST /api/questions/:id/upvote — Upvote a question
-router.post("/:id/upvote", upvoteQuestion);
+router.route("/:id/upvote")
+  .patch(upvoteQuestion);
 
 module.exports = router;

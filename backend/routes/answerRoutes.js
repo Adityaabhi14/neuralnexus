@@ -1,10 +1,13 @@
 const express = require("express");
-const router = express.Router();
-const { createAnswer } = require("../controllers/answerController");
-const upload = require("../middleware/upload");
+const { getAnswers, getAnswersByQuestionId, createAnswer } = require("../controllers/answerController");
 
-// POST /api/answers — Submit an answer (with optional video upload)
-// upload.single("video") handles a single file field named "video"
-router.post("/", upload.single("video"), createAnswer);
+const router = express.Router();
+
+router.route("/")
+  .get(getAnswers)
+  .post(createAnswer);
+
+router.route("/:questionId")
+  .get(getAnswersByQuestionId);
 
 module.exports = router;
